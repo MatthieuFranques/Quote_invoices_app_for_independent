@@ -1,0 +1,7 @@
+services:
+  web:
+    build: .
+    image: devis-factures
+    ports:
+      - "8080:80"
+    restart: unless-stopped
