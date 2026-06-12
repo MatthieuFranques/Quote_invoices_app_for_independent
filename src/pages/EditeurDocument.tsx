@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import LignesEditeur from '../components/LignesEditeur'
 import { ChampNombre, ChampZone } from '../components/champs'
-import { db } from '../db/db'
+import { db, getParametres } from '../db/db'
 import { calculerTotaux } from '../db/calculs'
 import type { Document, TypeDocument } from '../db/types'
 import { documentVide, labelStatut, labelType } from '../lib/document'
@@ -55,6 +55,15 @@ export default function EditeurDocument() {
     navigate('/documents')
   }
 
+  async function genererPdf() {
+    if (!doc) return
+    const params = await getParametres()
+    const client = clients?.find((c) => c.id === doc.clientId)
+    // Import dynamique : react-pdf est lourd, chargé seulement à la génération.
+    const { telechargerPdf } = await import('../pdf/generer')
+    await telechargerPdf(doc, params, client)
+  }
+
   return (
     <div>
       <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-gray-200 bg-white px-3 py-3">
@@ -72,6 +81,13 @@ export default function EditeurDocument() {
           </h1>
           <p className="text-xs text-gray-500">{labelStatut[doc.statut]}</p>
         </div>
+        <button
+          type="button"
+          onClick={genererPdf}
+          className="rounded-lg border border-blue-700 px-3 py-2 text-sm font-semibold text-blue-700"
+        >
+          PDF
+        </button>
         {!verrouille && (
           <button
             type="button"
