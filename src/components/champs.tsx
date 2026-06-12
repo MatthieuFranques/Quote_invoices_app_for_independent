@@ -36,6 +36,78 @@ export function ChampTexte({
   )
 }
 
+/** Champ numérique (montant, quantité, taux). Renvoie un nombre. */
+export function ChampNombre({
+  label,
+  valeur,
+  onChange,
+  step = 'any',
+  suffixe,
+}: {
+  label: string
+  valeur: number
+  onChange: (v: number) => void
+  step?: string
+  suffixe?: string
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-medium text-gray-700">
+        {label}
+      </span>
+      <div className="flex items-center gap-2">
+        <input
+          className={baseInput}
+          type="number"
+          inputMode="decimal"
+          step={step}
+          value={Number.isNaN(valeur) ? '' : valeur}
+          onChange={(e) =>
+            onChange(e.target.value === '' ? 0 : Number(e.target.value))
+          }
+        />
+        {suffixe && <span className="text-gray-500">{suffixe}</span>}
+      </div>
+    </label>
+  )
+}
+
+/** Liste déroulante. */
+export function ChampSelect<T extends string | number>({
+  label,
+  valeur,
+  options,
+  onChange,
+}: {
+  label: string
+  valeur: T
+  options: { valeur: T; label: string }[]
+  onChange: (v: T) => void
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-sm font-medium text-gray-700">
+        {label}
+      </span>
+      <select
+        className={baseInput}
+        value={valeur}
+        onChange={(e) => {
+          const brut = e.target.value
+          const choisi = options.find((o) => String(o.valeur) === brut)
+          if (choisi) onChange(choisi.valeur)
+        }}
+      >
+        {options.map((o) => (
+          <option key={String(o.valeur)} value={String(o.valeur)}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
 /** Champ texte multiligne. */
 export function ChampZone({
   label,
