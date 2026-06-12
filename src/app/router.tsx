@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router-dom'
 import Layout from './Layout'
 import Accueil from '../pages/Accueil'
 import Documents from '../pages/Documents'
+import EditeurDocument from '../pages/EditeurDocument'
 import Clients from '../pages/Clients'
 import Catalogue from '../pages/Catalogue'
 import Parametres from '../pages/Parametres'
@@ -13,6 +14,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Accueil /> },
       { path: 'documents', element: <Documents /> },
+      { path: 'documents/:id', element: <EditeurDocument /> },
       { path: 'clients', element: <Clients /> },
       { path: 'catalogue', element: <Catalogue /> },
       { path: 'parametres', element: <Parametres /> },
