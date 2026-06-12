@@ -8,11 +8,13 @@ import {
   importerDepuisFichier,
   telechargerSauvegarde,
 } from '../db/sauvegarde'
+import { fichierVersDataUrl } from '../lib/image'
 
 export default function Parametres() {
   const [form, setForm] = useState<ParametresEntreprise | null>(null)
   const [enregistre, setEnregistre] = useState(false)
   const fichierRef = useRef<HTMLInputElement>(null)
+  const logoRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getParametres().then(setForm)
@@ -30,6 +32,14 @@ export default function Parametres() {
     if (!form) return
     await db.parametres.put(form)
     setEnregistre(true)
+  }
+
+  async function choisirLogo(fichier: File) {
+    try {
+      set('logo', await fichierVersDataUrl(fichier))
+    } catch {
+      window.alert('Image illisible.')
+    }
   }
 
   async function importer(fichier: File) {
@@ -105,6 +115,51 @@ export default function Parametres() {
             type="email"
             inputMode="email"
           />
+        </Section>
+
+        <Section titre="Logo">
+          <div className="flex items-center gap-4">
+            {form.logo ? (
+              <img
+                src={form.logo}
+                alt="Logo"
+                className="size-20 rounded-lg border border-gray-200 object-contain"
+              />
+            ) : (
+              <div className="flex size-20 items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400">
+                Aucun logo
+              </div>
+            )}
+            <div className="flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => logoRef.current?.click()}
+                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700"
+              >
+                {form.logo ? 'Changer' : 'Ajouter un logo'}
+              </button>
+              {form.logo && (
+                <button
+                  type="button"
+                  onClick={() => set('logo', undefined)}
+                  className="text-sm font-semibold text-red-600"
+                >
+                  Retirer
+                </button>
+              )}
+            </div>
+            <input
+              ref={logoRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) choisirLogo(f)
+                e.target.value = ''
+              }}
+            />
+          </div>
         </Section>
 
         <Section titre="Mentions légales">
