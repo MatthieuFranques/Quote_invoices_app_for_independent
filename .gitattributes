@@ -1,0 +1,21 @@
+# Normalise les fins de ligne. Évite que gradlew (exécuté sur le CI Linux)
+# soit checkout en CRLF -> "bad interpreter".
+* text=auto eol=lf
+
+# Scripts Windows : CRLF obligatoire
+*.bat text eol=crlf
+*.cmd text eol=crlf
+gradlew.bat text eol=crlf
+
+# Scripts Unix : LF obligatoire
+gradlew text eol=lf
+*.sh text eol=lf
+
+# Binaires : ne jamais convertir
+*.png binary
+*.jpg binary
+*.ico binary
+*.icns binary
+*.jar binary
+*.keystore binary
+*.webp binary
