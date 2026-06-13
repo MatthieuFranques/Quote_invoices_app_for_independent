@@ -20,9 +20,17 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            label: windows
+            label: windows-x64
+            rustTarget: ''
+            args: ''
+          - os: windows-latest
+            label: windows-x86
+            rustTarget: i686-pc-windows-msvc
+            args: '--target i686-pc-windows-msvc'
           - os: macos-latest
             label: macos
+            rustTarget: ''
+            args: ''
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -35,6 +43,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rustTarget }}
 
       - name: Cache Rust
         uses: swatinem/rust-cache@v2
@@ -53,12 +63,14 @@ jobs:
           releaseName: 'Devis & Factures ${{ github.ref_name }}'
           releaseBody: |
             Téléchargements :
-            - **Windows** : fichier `.exe` (installeur) ci-dessous
+            - **Windows 64-bit** : `.exe` avec `x64` dans le nom
+            - **Windows 32-bit** : `.exe` avec `x86` dans le nom (PC anciens / Windows 32-bit)
             - **macOS** : fichier `.dmg` ci-dessous
             - **Android** : fichier `.apk` ci-dessous
             - **iPhone / autres** : ouvrir la PWA dans le navigateur puis « Ajouter à l'écran d'accueil »
           releaseDraft: false
           prerelease: false
+          args: ${{ matrix.args }}
 
   # ---------- Mobile : .apk (Android) via Capacitor ----------
   android:
