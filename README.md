@@ -21,6 +21,7 @@ données **sur son appareil**. Aucune information ne part sur Internet.
 - [Confidentialité & fonctionnement hors-ligne](#confidentialité--fonctionnement-hors-ligne)
 - [Stack technique](#stack-technique)
 - [Démarrage rapide](#démarrage-rapide)
+- [Télécharger l'application (.exe / .apk / .dmg)](#télécharger-lapplication-exe--apk--dmg)
 - [Structure du projet](#structure-du-projet)
 - [Sauvegarde des données](#sauvegarde-des-données)
 - [Conformité facturation française](#conformité-facturation-française)
@@ -112,6 +113,56 @@ est autosuffisant et ne nécessite plus aucune connexion pour fonctionner.
 
 ➡️ Guide détaillé (déploiement, Docker, installation sur téléphone) :
 [`docs/INSTALLATION.md`](docs/INSTALLATION.md).
+
+## Télécharger l'application (.exe / .apk / .dmg)
+
+L'app web est empaquetée en applications natives, **toutes 100 % hors-ligne**
+(le code et les données sont embarqués, rien ne part sur Internet) :
+
+| Plateforme        | Fichier            | Outil       |
+| ----------------- | ------------------ | ----------- |
+| Windows           | `.exe` (installeur)| Tauri       |
+| macOS             | `.dmg`             | Tauri       |
+| Android           | `.apk`             | Capacitor   |
+| iPhone / iPad     | PWA (voir ci-dessous) | navigateur |
+
+### Pour l'utilisateur final
+
+Va dans l'onglet **[Releases](../../releases)** du dépôt GitHub et télécharge le
+fichier correspondant à ton appareil :
+
+- **Windows** : `Devis-Factures_x.y.z_x64-setup.exe` → double-clic → installer.
+- **macOS** : `.dmg` → glisser dans Applications. (App non signée : au 1er lancement,
+  clic droit → « Ouvrir ».)
+- **Android** : `Devis-Factures-vX.Y.Z.apk` → ouvrir le fichier sur le téléphone.
+  Autoriser « installer depuis cette source » si demandé (APK debug non signé Play Store).
+- **iPhone / iPad** : pas de fichier à installer. Ouvre la PWA dans **Safari**,
+  bouton Partager → **« Sur l'écran d'accueil »**. Fonctionne hors-ligne ensuite.
+
+### Pour publier une release (mainteneur)
+
+Tout est construit automatiquement par GitHub Actions
+([`.github/workflows/release.yml`](.github/workflows/release.yml)) :
+
+```bash
+# Choisir une version, poser un tag, le pousser
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Le push du tag déclenche le build de `.exe` + `.dmg` (runners Windows/macOS) et de
+`.apk` (runner Linux + Android SDK), puis attache les fichiers à la Release GitHub.
+**Aucun outil lourd à installer en local** (ni Rust, ni Android SDK).
+
+### Builds en local (optionnel)
+
+```bash
+# Desktop (.exe / .dmg) — nécessite Rust : https://rustup.rs
+npm run desktop:build      # bundle dans src-tauri/target/release/bundle/
+
+# Android (.apk) — nécessite Java 17 + Android SDK
+npm run android:apk        # apk dans android/app/build/outputs/apk/debug/
+```
 
 ## Structure du projet
 

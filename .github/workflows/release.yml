@@ -1,0 +1,111 @@
+name: Release (.exe / .apk / .dmg)
+
+# Déclenche un build de release quand tu pousses un tag de version, ex:
+#   git tag v0.1.0 && git push origin v0.1.0
+# Ou manuellement depuis l'onglet Actions (workflow_dispatch).
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write # nécessaire pour créer la Release et y attacher les fichiers
+
+jobs:
+  # ---------- Desktop : .exe (Windows) + .dmg (macOS) via Tauri ----------
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            label: windows
+          - os: macos-latest
+            label: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Build app + Tauri bundle, upload to Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'Devis & Factures ${{ github.ref_name }}'
+          releaseBody: |
+            Téléchargements :
+            - **Windows** : fichier `.exe` (installeur) ci-dessous
+            - **macOS** : fichier `.dmg` ci-dessous
+            - **Android** : fichier `.apk` ci-dessous
+            - **iPhone / autres** : ouvrir la PWA dans le navigateur puis « Ajouter à l'écran d'accueil »
+          releaseDraft: false
+          prerelease: false
+
+  # ---------- Mobile : .apk (Android) via Capacitor ----------
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install npm deps
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+        working-directory: android
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             "out/Devis-Factures-${{ github.ref_name }}.apk"
+
+      - name: Upload APK to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: out/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
