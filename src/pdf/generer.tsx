@@ -20,7 +20,7 @@ export function genererPdfBlob(
 
 /** Nom de fichier propre pour le PDF (ex : FAC-2026-001.pdf). */
 export function nomFichierPdf(doc: Document): string {
-  const base = doc.numero ?? `${labelType[doc.type]}-brouillon`
+  const base = doc.numero ?? labelType[doc.type]
   return `${base}.pdf`.replace(/\s+/g, '-')
 }
 

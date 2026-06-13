@@ -150,7 +150,9 @@ export function DocumentPDF({
             <Text style={{ ...styles.titre, color: accent }}>
               {labelType[doc.type].toUpperCase()}
             </Text>
-            <Text style={styles.numero}>{doc.numero ?? 'BROUILLON'}</Text>
+            {doc.numero ? (
+              <Text style={styles.numero}>{doc.numero}</Text>
+            ) : null}
             <Text style={styles.ligneInfo}>
               Date : {formatDate(doc.dateEmission ?? doc.dateCreation)}
             </Text>
