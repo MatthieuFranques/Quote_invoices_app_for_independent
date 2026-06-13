@@ -31,6 +31,13 @@ export class AppDatabase extends Dexie {
 
 export const db = new AppDatabase()
 
+// Crée la ligne paramètres par défaut au tout premier lancement (création de la
+// base). Doit se faire ici et non dans une lecture : écrire pendant un
+// `liveQuery` déclenche « Readwrite transaction in liveQuery context ».
+db.on('populate', () => {
+  db.parametres.put(parametresParDefaut())
+})
+
 /** Paramètres entreprise par défaut (auto-entrepreneur en franchise de TVA). */
 export function parametresParDefaut(): ParametresEntreprise {
   const annee = new Date().getFullYear()
@@ -67,8 +74,5 @@ export function parametresParDefaut(): ParametresEntreprise {
  */
 export async function getParametres(): Promise<ParametresEntreprise> {
   const existant = await db.parametres.get('company')
-  if (existant) return existant
-  const defaut = parametresParDefaut()
-  await db.parametres.put(defaut)
-  return defaut
+  return existant ?? parametresParDefaut()
 }
