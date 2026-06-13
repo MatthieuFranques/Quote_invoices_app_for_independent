@@ -1,86 +1,185 @@
-# Projet : App de devis / factures pour indépendant — 100% locale
+# FactureLocale
 
-## Contexte
-Application destinée à UN indépendant (non technique). Il doit pouvoir créer des devis et factures depuis son téléphone ou son PC, à partir de modèles pré-remplis, générer un PDF propre, et l'envoyer par email. Aucune donnée ne doit partir sur un serveur : tout est local et hors-ligne.
+**Application de devis et factures pour indépendant français — 100 % locale, hors-ligne, sans serveur.**
 
-## Choix technique : PWA locale (offline-first)
-- **Frontend** : React + Vite + TypeScript
-- **UI** : Tailwind CSS (interface mobile-first, gros boutons, simple)
-- **PWA** : vite-plugin-pwa (service worker, installable sur Android/iOS/PC, fonctionne sans connexion)
-- **Stockage local** : IndexedDB via la librairie Dexie.js (clients, devis, factures, paramètres)
-- **Génération PDF** : pdf-lib ou @react-pdf/renderer (génération 100% côté client, pas de serveur)
-- **Envoi email** : Web Share API (navigator.share avec le fichier PDF) → ouvre l'appli mail du téléphone avec le PDF en pièce jointe. Fallback : téléchargement du PDF + lien mailto pré-rempli (objet + corps).
-- **Sauvegarde / portabilité** : export et import de toutes les données en un fichier JSON (pour changer d'appareil ou faire un backup).
+FactureLocale permet à un travailleur indépendant (auto-entrepreneur, freelance,
+profession libérale) de créer des devis et des factures depuis son téléphone ou
+son ordinateur, de générer un PDF propre, et de garder l'intégralité de ses
+données **sur son appareil**. Aucune information ne part sur Internet.
 
-## Fonctionnalités (MVP)
+> ⚠️ **Avertissement** : cet outil aide à produire des documents, mais ne
+> garantit pas leur conformité fiscale ou légale. La responsabilité du contenu
+> et du respect de la réglementation incombe à l'utilisateur. Voir
+> [Avertissement & responsabilité](#avertissement--responsabilité).
 
-### 1. Paramètres de l'entreprise (première utilisation)
-- Nom, adresse, SIRET, téléphone, email, logo (upload image stockée en local)
-- Mentions légales : TVA applicable ou non ("TVA non applicable, art. 293 B du CGI" pour auto-entrepreneur), conditions de paiement, pénalités de retard, IBAN
-- Choix du préfixe et de la numérotation auto des documents (ex : DEV-2026-001, FAC-2026-001)
+---
 
-### 2. Gestion des clients
-- Liste de clients : nom/raison sociale, adresse, email, téléphone, SIRET optionnel
-- Création rapide d'un client depuis le formulaire de devis
+## Sommaire
 
-### 3. Catalogue de prestations
-- Lignes réutilisables : libellé, prix unitaire HT, unité (heure, jour, forfait, pièce), taux de TVA
-- Sélection rapide dans le devis pour ne pas tout retaper
+- [Pourquoi cette app](#pourquoi-cette-app)
+- [Fonctionnalités](#fonctionnalités)
+- [Confidentialité & fonctionnement hors-ligne](#confidentialité--fonctionnement-hors-ligne)
+- [Stack technique](#stack-technique)
+- [Démarrage rapide](#démarrage-rapide)
+- [Structure du projet](#structure-du-projet)
+- [Sauvegarde des données](#sauvegarde-des-données)
+- [Conformité facturation française](#conformité-facturation-française)
+- [Contribuer](#contribuer)
+- [Licence](#licence)
+- [Avertissement & responsabilité](#avertissement--responsabilité)
 
-### 4. Création de devis
-- Choix du client + ajout de lignes (depuis le catalogue ou libres)
-- Calcul automatique : total HT, TVA par taux, total TTC, remise éventuelle
-- Date de validité du devis
-- Statuts : brouillon → envoyé → accepté / refusé
-- Conversion d'un devis accepté en facture en 1 clic (reprend toutes les lignes)
+---
 
-### 5. Création de factures
-- Mêmes mécanismes que le devis + date d'échéance, acompte éventuel
-- Statuts : brouillon → envoyée → payée / en retard
-- Numérotation séquentielle stricte sans trou (obligation légale française)
-- Une facture émise n'est plus modifiable (seulement duplicable ou avoir)
+## Pourquoi cette app
 
-### 6. Modèles de documents PDF
-- 2 ou 3 modèles visuels au choix (classique, moderne, minimal) avec couleur d'accent personnalisable
-- Le PDF contient obligatoirement : infos émetteur, infos client, numéro, dates, lignes, totaux HT/TVA/TTC, mentions légales
-- Aperçu avant génération
+La plupart des logiciels de facturation sont des services en ligne : abonnement,
+compte, données hébergées chez un tiers. FactureLocale prend le parti inverse —
+**tout reste chez vous** :
 
-### 7. Envoi par email
-- Bouton "Envoyer" → génère le PDF → navigator.share (mobile) ou mailto + téléchargement (desktop)
-- Objet et corps du mail pré-remplis (modifiables dans les paramètres) : "Devis n°DEV-2026-001 — [Nom entreprise]"
+- pas de compte, pas d'abonnement, pas de cloud ;
+- fonctionne sans connexion Internet, même en avion ;
+- installable comme une application (Android, PC, iOS) grâce à la technologie PWA ;
+- vos clients, devis et factures sont stockés uniquement dans le navigateur de
+  votre appareil.
 
-### 8. Tableau de bord
-- Liste des documents avec recherche et filtres par statut
-- Petits totaux : CA facturé du mois / de l'année, factures en attente de paiement
+## Fonctionnalités
 
-### 9. Conformité facturation électronique (réforme 2026-2027)
-Contexte légal : en France, les factures B2B doivent être au format électronique structuré et transiter par une plateforme agréée (PA, ex-PDP). Réception obligatoire pour tous dès septembre 2026, émission obligatoire pour les micro-entreprises en septembre 2027. L'app ne transmet pas elle-même les factures à l'administration (impossible en local), mais elle produit des fichiers conformes prêts à être importés dans n'importe quelle plateforme agréée.
+- **Paramètres entreprise** : identité, SIRET, logo, mentions légales, IBAN,
+  préfixes de numérotation, couleur d'accent des PDF.
+- **Clients** : fiches B2B (professionnel) ou B2C (particulier), avec SIRET pour
+  les pros.
+- **Catalogue de prestations** : lignes réutilisables (libellé, prix HT, unité,
+  taux de TVA) pour facturer plus vite.
+- **Devis & factures** : éditeur avec calcul automatique du HT, de la TVA par
+  taux, du TTC, des remises (par ligne et globale) et de l'acompte.
+- **Conversion devis → facture** en un clic (reprend client, lignes et remises).
+- **Génération PDF** côté client, sans serveur.
+- **Tableau de bord** : chiffre d'affaires du mois / de l'année, factures en
+  attente, recherche et filtres sur les documents.
+- **Import / export JSON** : sauvegarde complète ou export des seuls documents,
+  pour changer d'appareil ou archiver.
 
-- **Génération Factur-X** : la facture est exportée en PDF/A-3 avec le fichier XML CII embarqué (profil BASIC de la norme EN 16931). Utiliser pdf-lib pour l'embarquement de la pièce jointe XML + métadonnées XMP PDF/A-3. C'est l'étape technique la plus délicate du projet : la traiter isolément, avec validation du XML généré.
-- **Export XML seul** : en complément, bouton pour exporter le XML CII brut (utile pour certains imports).
-- **Mentions obligatoires renforcées** : SIREN/SIRET du client professionnel (obligatoire en B2B), adresse de livraison si différente de l'adresse de facturation, catégorie de l'opération (livraison de biens / prestation de services / mixte), option de paiement de la TVA sur les débits le cas échéant.
-- **Distinction client pro / particulier** : champ type de client. B2B = Factur-X requis ; B2C = PDF simple autorisé (e-reporting géré en dehors de l'app, via la plateforme agréée ou le comptable).
-- **Archivage** : conservation de tous les documents émis (PDF + XML) dans le stockage local, avec export ZIP de l'ensemble pour transmission au comptable ou import dans une plateforme agréée.
-- **Verrouillage strict** : facture émise = immuable, modification uniquement par avoir (facture d'avoir avec numérotation propre).
+Un aperçu des écrans cibles se trouve dans le dossier [`maquette/`](maquette/).
 
-## Contraintes
-- Mobile-first : tout doit être utilisable au pouce sur un écran de téléphone
-- Zéro dépendance réseau au runtime (sauf l'ouverture du client mail)
-- Données jamais envoyées à un serveur
-- Interface en français
-- Code simple et commenté, un seul projet, facile à maintenir
+## Confidentialité & fonctionnement hors-ligne
 
-## Étapes de développement suggérées
-1. Setup projet Vite + React + TS + Tailwind + PWA + Dexie
-2. Modèle de données (settings, clients, items, documents) + export/import JSON
-3. Écran paramètres entreprise + onboarding première utilisation
-4. CRUD clients et catalogue de prestations
-5. Formulaire devis/facture avec calculs automatiques
-6. Génération PDF (1 modèle d'abord, les autres ensuite)
-7. Envoi email (Web Share API + fallback mailto)
-8. Tableau de bord + statuts + conversion devis→facture
-9. Génération Factur-X (XML CII + embarquement PDF/A-3) et mentions B2B — étape isolée, avec validation
-10. Polish : numérotation légale, verrouillage des factures émises, avoirs, export ZIP comptable, tests sur mobile
+C'est le cœur du projet :
 
-## Alternative si finalement desktop uniquement
-Si l'usage téléphone est abandonné : Tauri (Rust + même frontend React) avec SQLite pour le stockage et envoi SMTP automatique via les identifiants mail de l'utilisateur (nodemailer côté sidecar ou plugin Tauri). Plus lourd à mettre en place, à ne faire que si nécessaire.
+- **Aucun appel réseau au runtime.** L'application ne contacte aucun serveur, ni
+  CDN, ni police distante. Tout le code des dépendances est intégré au build.
+- **Stockage local uniquement** via IndexedDB (base de données du navigateur).
+- **Service worker** (PWA) : après le premier chargement, l'app est mise en cache
+  et fonctionne entièrement hors-ligne.
+- Les seules « sorties » possibles sont des actions **explicites de
+  l'utilisateur** : télécharger un PDF ou exporter un fichier JSON, qui restent
+  sur l'appareil.
+
+> L'envoi par e-mail n'est pas activé dans cette version : on génère le PDF et on
+> l'enregistre en local. L'utilisateur l'envoie ensuite par ses propres moyens.
+
+## Stack technique
+
+| Domaine | Choix |
+|---|---|
+| Framework UI | React 19 + TypeScript |
+| Build | Vite 6 |
+| Style | Tailwind CSS 4 (design system Material 3, voir `maquette/facturelocale/DESIGN.md`) |
+| PWA / offline | `vite-plugin-pwa` (Workbox) |
+| Base locale | IndexedDB via Dexie.js |
+| PDF | `@react-pdf/renderer` (polices intégrées, aucun téléchargement) |
+| Routage | React Router |
+
+## Démarrage rapide
+
+Prérequis : **Node.js 20+** et npm.
+
+```bash
+# 1. Installer les dépendances (une seule fois, nécessite Internet)
+npm install
+
+# 2. Lancer en développement
+npm run dev
+
+# 3. Construire la version de production (génère le dossier dist/)
+npm run build
+
+# 4. Prévisualiser le build de production en local
+npm run preview
+```
+
+Une fois `npm run build` exécuté, **tout est dans `dist/`** : ce dossier statique
+est autosuffisant et ne nécessite plus aucune connexion pour fonctionner.
+
+➡️ Guide détaillé (déploiement, Docker, installation sur téléphone) :
+[`docs/INSTALLATION.md`](docs/INSTALLATION.md).
+
+## Structure du projet
+
+```
+src/
+  app/         Coquille de l'application (Layout, router)
+  components/  Composants réutilisables (champs, feuille modale, icônes…)
+  db/          Modèle de données, base Dexie, calculs, sauvegarde JSON
+  lib/         Utilitaires (formatage, logique document, images)
+  pages/       Écrans (Accueil, Clients, Catalogue, Éditeur, Paramètres)
+  pdf/         Génération des PDF (modèle + helpers)
+maquette/      Maquettes HTML/PNG de référence + design system
+docs/          Documentation (installation, specs, plan)
+```
+
+## Sauvegarde des données
+
+Les données vivent dans le navigateur de l'appareil. Pour les protéger ou
+migrer :
+
+- **Paramètres → Sauvegarde** : exporte / importe **toutes** les données
+  (paramètres, clients, catalogue, documents) en un fichier JSON.
+  ⚠️ L'import **remplace** tout le contenu existant.
+- **Paramètres → Documents (JSON)** : exporte / importe **seulement les
+  documents**. L'import **ajoute** sans effacer l'existant.
+
+Pensez à exporter régulièrement : vider les données du navigateur efface la base.
+
+## Conformité facturation française
+
+L'application vise à respecter les règles de facturation françaises :
+
+- **Numérotation séquentielle stricte sans trou** (séquences distinctes pour
+  devis et factures).
+- **Facture émise = immuable** : modification uniquement via un avoir.
+- **TVA** : gestion de la franchise (auto-entrepreneur, « TVA non applicable,
+  art. 293 B du CGI ») et calcul par taux.
+- **B2B vs B2C** : le SIRET client est requis pour les professionnels.
+
+La conformité **Factur-X** (PDF/A-3 + XML CII, réforme 2026-2027) est un jalon
+identifié, traité séparément. Voir `docs/` pour les specs. L'application **ne
+transmet pas** les factures à l'administration : elle produit des fichiers
+destinés à être importés dans une plateforme agréée (PA/PDP) ou transmis au
+comptable.
+
+## Contribuer
+
+Les contributions sont les bienvenues. Lisez [`CONTRIBUTING.md`](CONTRIBUTING.md)
+et le [code de conduite](CODE_OF_CONDUCT.md) avant d'ouvrir une issue ou une pull
+request. Pour signaler une faille, voir [`SECURITY.md`](SECURITY.md).
+
+## Licence
+
+Distribué sous licence **MIT**. Voir [`LICENSE`](LICENSE).
+
+## Avertissement & responsabilité
+
+FactureLocale est un outil d'aide à la rédaction de devis et factures, fourni
+**« en l'état », sans aucune garantie** (cf. clause de la licence MIT).
+
+- L'outil **ne constitue pas un conseil juridique, fiscal ou comptable**.
+- Il **ne garantit pas** que les documents produits sont conformes à la
+  réglementation en vigueur (mentions obligatoires, TVA, numérotation,
+  Factur-X, etc.), celle-ci pouvant évoluer.
+- **L'utilisateur reste seul responsable** de l'exactitude des informations
+  saisies, de la conformité légale de ses documents, de la conservation et de la
+  sauvegarde de ses données.
+- Les auteurs et contributeurs **ne sauraient être tenus responsables** de toute
+  perte de données, sanction, ou préjudice résultant de l'usage de l'outil.
+
+En cas de doute, consultez un expert-comptable ou l'administration fiscale.
