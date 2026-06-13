@@ -6,7 +6,12 @@ import Icone from '../components/Icone'
 import { db, getParametres } from '../db/db'
 import { calculerTotaux } from '../db/calculs'
 import type { Document, TypeDocument } from '../db/types'
-import { documentVide, labelStatut, labelType } from '../lib/document'
+import {
+  documentVide,
+  factureDepuisDevis,
+  labelStatut,
+  labelType,
+} from '../lib/document'
 import { formatEuro, versInputDate, depuisInputDate } from '../lib/format'
 
 const JOUR = 86_400_000
@@ -83,6 +88,21 @@ export default function EditeurDocument() {
     const p = await getParametres()
     const { telechargerPdf } = await import('../pdf/generer')
     await telechargerPdf(doc, p, client)
+  }
+
+  /** Convertit le devis courant en une nouvelle facture (brouillon liée). */
+  async function convertirEnFacture() {
+    if (!doc || doc.type !== 'devis') return
+    const devis: Document = { ...doc, updatedAt: Date.now() }
+    let devisId = devis.id
+    if (devisId == null) {
+      devisId = Number(await db.documents.add(devis))
+    } else {
+      await db.documents.put(devis)
+    }
+    const facture = factureDepuisDevis({ ...devis, id: devisId })
+    const newId = await db.documents.add(facture)
+    navigate(`/documents/${newId}`)
   }
 
   const dateEmission = versInputDate(doc.dateEmission ?? doc.dateCreation)
@@ -201,19 +221,6 @@ export default function EditeurDocument() {
                   className="w-full rounded-lg border border-outline-variant bg-surface-container-low px-md py-sm text-body-md text-on-surface-variant outline-none"
                 />
               </div>
-              <label className="block md:col-span-2">
-                <span className="mb-xs block text-label-sm text-on-surface-variant">
-                  Adresse de livraison
-                </span>
-                <textarea
-                  disabled={verrouille}
-                  rows={2}
-                  value={doc.adresseLivraison ?? ''}
-                  onChange={(e) => set('adresseLivraison', e.target.value)}
-                  placeholder="Saisir une adresse spécifique si différente de la facturation"
-                  className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md outline-none focus:border-primary"
-                />
-              </label>
             </div>
           </div>
 
@@ -385,23 +392,45 @@ export default function EditeurDocument() {
                 onClick={genererPdf}
                 className="flex w-full items-center justify-between rounded-lg bg-surface-container-lowest p-md text-on-surface transition-all hover:shadow-sm"
               >
-                <span className="text-label-md">Aperçu PDF</span>
+                <span className="text-label-md">Générer le PDF</span>
                 <Icone nom="pdf" className="size-5 text-outline" />
               </button>
+              {doc.type === 'devis' && !verrouille && (
+                <button
+                  type="button"
+                  onClick={convertirEnFacture}
+                  className="flex w-full items-center justify-between rounded-lg bg-primary p-md text-on-primary transition-all hover:opacity-90"
+                >
+                  <span className="text-label-md font-bold">
+                    Convertir en facture
+                  </span>
+                  <Icone nom="document" className="size-5" />
+                </button>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* Barre d'action flottante — mobile */}
-      <div className="pointer-events-none fixed bottom-[80px] left-0 w-full px-margin-mobile md:hidden">
+      <div className="pointer-events-none fixed bottom-[80px] left-0 flex w-full gap-sm px-margin-mobile md:hidden">
+        {!verrouille && (
+          <button
+            type="button"
+            onClick={enregistrer}
+            className="pointer-events-auto flex h-[56px] flex-1 items-center justify-center gap-xs rounded-xl bg-surface-container-high font-bold text-on-surface shadow-xl active:scale-95"
+          >
+            <Icone nom="enregistrer" className="size-5" />
+            Enregistrer
+          </button>
+        )}
         <button
           type="button"
           onClick={genererPdf}
-          className="pointer-events-auto flex h-[56px] w-full items-center justify-center gap-md rounded-xl bg-primary font-bold text-on-primary shadow-xl active:scale-95"
+          className="pointer-events-auto flex h-[56px] flex-1 items-center justify-center gap-xs rounded-xl bg-primary font-bold text-on-primary shadow-xl active:scale-95"
         >
-          <Icone nom="envoyer" className="size-5" />
-          Générer &amp; Envoyer
+          <Icone nom="pdf" className="size-5" />
+          Générer le PDF
         </button>
       </div>
 
@@ -414,13 +443,23 @@ export default function EditeurDocument() {
         >
           Annuler
         </button>
+        {!verrouille && (
+          <button
+            type="button"
+            onClick={enregistrer}
+            className="flex h-[48px] items-center gap-xs rounded-xl bg-surface-container-high px-lg text-label-md font-bold text-on-surface transition-colors hover:bg-outline-variant"
+          >
+            <Icone nom="enregistrer" className="size-5" />
+            Enregistrer
+          </button>
+        )}
         <button
           type="button"
           onClick={genererPdf}
           className="flex h-[48px] items-center gap-md rounded-xl bg-primary px-lg font-bold text-on-primary transition-opacity hover:opacity-90"
         >
-          <Icone nom="envoyer" className="size-5" />
-          Générer &amp; Envoyer
+          <Icone nom="pdf" className="size-5" />
+          Générer le PDF
         </button>
       </div>
     </div>

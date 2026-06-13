@@ -23,6 +23,30 @@ export function documentVide(type: TypeDocument): Document {
   return base
 }
 
+/**
+ * Crée une facture (brouillon) à partir d'un devis : reprend client, lignes,
+ * remise, adresse de livraison et notes ; nouvelle échéance à 30 jours ; lien
+ * vers le devis d'origine. Le numéro reste vide (attribué à l'émission).
+ */
+export function factureDepuisDevis(devis: Document): Document {
+  const now = Date.now()
+  return {
+    type: 'facture',
+    statut: 'brouillon',
+    clientId: devis.clientId,
+    lignes: devis.lignes.map((l) => ({ ...l })),
+    remiseGlobalePourcent: devis.remiseGlobalePourcent,
+    dateCreation: now,
+    dateEcheance: now + 30 * JOUR,
+    adresseLivraison: devis.adresseLivraison,
+    categorieOperation: devis.categorieOperation,
+    notes: devis.notes,
+    verrouille: false,
+    devisOrigineId: devis.id,
+    updatedAt: now,
+  }
+}
+
 export const labelType: Record<TypeDocument, string> = {
   devis: 'Devis',
   facture: 'Facture',

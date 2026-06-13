@@ -6,6 +6,8 @@ import type { ParametresEntreprise } from '../db/types'
 import {
   FichierInvalideError,
   importerDepuisFichier,
+  importerDocumentsDepuisFichier,
+  telechargerDocuments,
   telechargerSauvegarde,
 } from '../db/sauvegarde'
 import { fichierVersDataUrl } from '../lib/image'
@@ -15,6 +17,7 @@ export default function Parametres() {
   const [enregistre, setEnregistre] = useState(false)
   const fichierRef = useRef<HTMLInputElement>(null)
   const logoRef = useRef<HTMLInputElement>(null)
+  const docsRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     getParametres().then(setForm)
@@ -51,6 +54,17 @@ export default function Parametres() {
       await importerDepuisFichier(fichier)
       setForm(await getParametres())
       window.alert('Sauvegarde importée.')
+    } catch (e) {
+      const msg =
+        e instanceof FichierInvalideError ? e.message : 'Échec de l’import.'
+      window.alert(msg)
+    }
+  }
+
+  async function importerDocs(fichier: File) {
+    try {
+      const n = await importerDocumentsDepuisFichier(fichier)
+      window.alert(`${n} document(s) importé(s) et ajouté(s).`)
     } catch (e) {
       const msg =
         e instanceof FichierInvalideError ? e.message : 'Échec de l’import.'
@@ -241,6 +255,41 @@ export default function Parametres() {
             onChange={(v) => set('couleurAccent', v)}
             type="color"
           />
+        </Section>
+
+        <Section titre="Documents (JSON)">
+          <p className="text-label-sm text-on-surface-variant">
+            Exportez vos devis / factures dans un fichier JSON, ou importez-en
+            depuis un autre appareil. L'import <strong>ajoute</strong> les
+            documents sans effacer les existants.
+          </p>
+          <div className="flex flex-col gap-sm">
+            <button
+              type="button"
+              onClick={telechargerDocuments}
+              className="rounded-lg border border-primary px-lg py-sm font-bold text-primary"
+            >
+              Exporter les documents (JSON)
+            </button>
+            <button
+              type="button"
+              onClick={() => docsRef.current?.click()}
+              className="rounded-lg border border-outline-variant px-lg py-sm font-bold text-on-surface"
+            >
+              Importer des documents
+            </button>
+            <input
+              ref={docsRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0]
+                if (f) importerDocs(f)
+                e.target.value = ''
+              }}
+            />
+          </div>
         </Section>
 
         <Section titre="Sauvegarde">

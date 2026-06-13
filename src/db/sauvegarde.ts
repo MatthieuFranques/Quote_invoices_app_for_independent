@@ -111,3 +111,68 @@ export async function importerDepuisFichier(fichier: File): Promise<void> {
   }
   await importerDonnees(data)
 }
+
+// --- Export / import des documents uniquement (non destructif) -------------
+
+/** Format d'un export ne contenant que des documents. */
+export interface ExportDocumentsJSON {
+  type: 'documents'
+  version: 1
+  exporteLe: string
+  documents: Document[]
+}
+
+/** Télécharge uniquement les documents (devis / factures / avoirs). */
+export async function telechargerDocuments(): Promise<void> {
+  const documents = await db.documents.toArray()
+  const data: ExportDocumentsJSON = {
+    type: 'documents',
+    version: 1,
+    exporteLe: new Date().toISOString(),
+    documents,
+  }
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json',
+  })
+  const url = URL.createObjectURL(blob)
+  const date = new Date().toISOString().slice(0, 10)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `documents-${date}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+/**
+ * Importe des documents et les AJOUTE aux documents existants (fusion, non
+ * destructif). Les `id` d'origine sont retirés : la base attribue de nouveaux
+ * identifiants pour éviter tout écrasement. Renvoie le nombre ajouté.
+ *
+ * Accepte aussi un fichier de sauvegarde complète (on n'importe que ses
+ * documents).
+ */
+export async function importerDocumentsDepuisFichier(
+  fichier: File,
+): Promise<number> {
+  const texte = await fichier.text()
+  let data: unknown
+  try {
+    data = JSON.parse(texte)
+  } catch {
+    throw new FichierInvalideError('Le fichier n’est pas un JSON valide.')
+  }
+  if (typeof data !== 'object' || data === null) {
+    throw new FichierInvalideError('Fichier illisible.')
+  }
+  const docs = (data as Record<string, unknown>).documents
+  if (!Array.isArray(docs)) {
+    throw new FichierInvalideError('Aucun document trouvé dans le fichier.')
+  }
+  const sansId = (docs as Document[]).map((d) => {
+    const copie = { ...d }
+    delete copie.id
+    return copie
+  })
+  await db.documents.bulkAdd(sansId)
+  return sansId.length
+}

@@ -56,7 +56,7 @@ export default function Layout() {
           className="flex h-[56px] w-full items-center justify-center gap-xs rounded-xl bg-primary text-label-md font-bold text-on-primary transition-all hover:opacity-90 active:scale-95"
         >
           <Icone nom="plus" className="size-5" />
-          Nouveau Devis
+          Nouveau Document
         </button>
 
         <div className="mt-auto flex items-center gap-sm border-t border-outline-variant pt-md">
