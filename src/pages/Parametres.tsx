@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import PageEntete from '../components/PageEntete'
+import PageEntete, { Page } from '../components/PageEntete'
 import { ChampTexte, ChampZone, Interrupteur, Section } from '../components/champs'
 import { db, getParametres } from '../db/db'
 import type { ParametresEntreprise } from '../db/types'
@@ -60,29 +60,30 @@ export default function Parametres() {
 
   if (!form) {
     return (
-      <div>
-        <PageEntete titre="Réglages" />
-        <p className="p-4 text-gray-600">Chargement…</p>
-      </div>
+      <Page>
+        <PageEntete titre="Paramètres" />
+        <p className="text-on-surface-variant">Chargement…</p>
+      </Page>
     )
   }
 
   return (
-    <div>
+    <Page>
       <PageEntete
-        titre="Réglages"
+        titre="Paramètres"
+        sousTitre="Identité, mentions légales, numérotation et sauvegarde."
         actions={
           <button
             type="button"
             onClick={enregistrer}
-            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white"
+            className="h-[48px] rounded-xl bg-primary px-lg text-label-md font-bold text-on-primary transition-all hover:opacity-90 active:scale-95"
           >
             {enregistre ? 'Enregistré ✓' : 'Enregistrer'}
           </button>
         }
       />
 
-      <div className="space-y-8 p-4">
+      <div className="grid grid-cols-1 gap-lg lg:grid-cols-2">
         <Section titre="Identité">
           <ChampTexte
             label="Nom / raison sociale"
@@ -118,23 +119,23 @@ export default function Parametres() {
         </Section>
 
         <Section titre="Logo">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-lg">
             {form.logo ? (
               <img
                 src={form.logo}
                 alt="Logo"
-                className="size-20 rounded-lg border border-gray-200 object-contain"
+                className="size-20 rounded-lg border border-outline-variant object-contain"
               />
             ) : (
-              <div className="flex size-20 items-center justify-center rounded-lg border border-dashed border-gray-300 text-xs text-gray-400">
+              <div className="flex size-20 items-center justify-center rounded-lg border border-dashed border-outline-variant text-label-sm text-on-surface-variant">
                 Aucun logo
               </div>
             )}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-sm">
               <button
                 type="button"
                 onClick={() => logoRef.current?.click()}
-                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-700"
+                className="rounded-lg border border-outline-variant px-md py-sm text-label-md font-semibold text-on-surface"
               >
                 {form.logo ? 'Changer' : 'Ajouter un logo'}
               </button>
@@ -142,7 +143,7 @@ export default function Parametres() {
                 <button
                   type="button"
                   onClick={() => set('logo', undefined)}
-                  className="text-sm font-semibold text-red-600"
+                  className="text-label-md font-semibold text-error"
                 >
                   Retirer
                 </button>
@@ -210,7 +211,7 @@ export default function Parametres() {
             valeur={form.prefixeAvoir}
             onChange={(v) => set('prefixeAvoir', v)}
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-label-sm text-on-surface-variant">
             Les numéros sont attribués automatiquement et séquentiellement à
             l’émission (obligation légale : sans trou).
           </p>
@@ -228,7 +229,7 @@ export default function Parametres() {
             onChange={(v) => set('emailCorps', v)}
             rows={4}
           />
-          <p className="text-xs text-gray-500">
+          <p className="text-label-sm text-on-surface-variant">
             Variables disponibles : {'{type}'}, {'{numero}'}, {'{entreprise}'}.
           </p>
         </Section>
@@ -243,22 +244,22 @@ export default function Parametres() {
         </Section>
 
         <Section titre="Sauvegarde">
-          <p className="text-xs text-gray-500">
+          <p className="text-label-sm text-on-surface-variant">
             Exportez toutes vos données dans un fichier pour les sauvegarder ou
             changer d’appareil.
           </p>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-sm">
             <button
               type="button"
               onClick={telechargerSauvegarde}
-              className="rounded-lg border border-blue-700 px-4 py-3 font-semibold text-blue-700"
+              className="rounded-lg border border-primary px-lg py-sm font-bold text-primary"
             >
               Exporter mes données (JSON)
             </button>
             <button
               type="button"
               onClick={() => fichierRef.current?.click()}
-              className="rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700"
+              className="rounded-lg border border-outline-variant px-lg py-sm font-bold text-on-surface"
             >
               Importer une sauvegarde
             </button>
@@ -276,6 +277,6 @@ export default function Parametres() {
           </div>
         </Section>
       </div>
-    </div>
+    </Page>
   )
 }

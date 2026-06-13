@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import PageEntete from '../components/PageEntete'
+import { Page } from '../components/PageEntete'
 import Feuille from '../components/Feuille'
+import Icone from '../components/Icone'
 import { ChampNombre, ChampSelect, ChampTexte } from '../components/champs'
 import { db } from '../db/db'
 import type { PrestationCatalogue, Unite } from '../db/types'
 import { formatEuro, libelleUnite } from '../lib/format'
 
-/** Prestation vide pour une nouvelle entrée du catalogue. */
 function prestationVide(): PrestationCatalogue {
   return { libelle: '', prixUnitaireHT: 0, unite: 'heure', tauxTva: 20 }
 }
@@ -32,6 +32,19 @@ export default function Catalogue() {
     [],
   )
   const [edition, setEdition] = useState<PrestationCatalogue | null>(null)
+  const [recherche, setRecherche] = useState('')
+  const [uniteFiltre, setUniteFiltre] = useState<'tout' | Unite>('tout')
+  const [tvaFiltre, setTvaFiltre] = useState<'tout' | string>('tout')
+
+  const liste = useMemo(() => {
+    const q = recherche.trim().toLowerCase()
+    return (prestations ?? []).filter((p) => {
+      if (uniteFiltre !== 'tout' && p.unite !== uniteFiltre) return false
+      if (tvaFiltre !== 'tout' && String(p.tauxTva) !== tvaFiltre) return false
+      if (!q) return true
+      return p.libelle.toLowerCase().includes(q)
+    })
+  }, [prestations, recherche, uniteFiltre, tvaFiltre])
 
   async function enregistrer() {
     if (!edition) return
@@ -47,11 +60,10 @@ export default function Catalogue() {
     setEdition(null)
   }
 
-  async function supprimer() {
-    if (edition?.id == null) return
-    if (!window.confirm(`Supprimer « ${edition.libelle} » ?`)) return
-    await db.catalogue.delete(edition.id)
-    setEdition(null)
+  async function supprimer(p: PrestationCatalogue) {
+    if (p.id == null) return
+    if (!window.confirm(`Supprimer « ${p.libelle} » ?`)) return
+    await db.catalogue.delete(p.id)
   }
 
   function set<K extends keyof PrestationCatalogue>(
@@ -62,47 +74,148 @@ export default function Catalogue() {
   }
 
   return (
-    <div>
-      <PageEntete
-        titre="Catalogue"
-        actions={
-          <button
-            type="button"
-            onClick={() => setEdition(prestationVide())}
-            className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white"
-          >
-            + Nouveau
-          </button>
-        }
-      />
+    <Page>
+      <div className="mb-xl flex flex-col justify-between gap-lg md:flex-row md:items-center">
+        <div>
+          <h1 className="text-headline-lg-mobile text-on-surface md:text-headline-lg">
+            Catalogue des Prestations
+          </h1>
+          <p className="text-body-md text-on-surface-variant">
+            Gérez vos articles et services réutilisables pour une facturation
+            rapide.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setEdition(prestationVide())}
+          className="flex h-[48px] items-center gap-xs rounded-xl bg-primary px-lg text-label-md font-bold text-on-primary transition-all hover:opacity-90 active:scale-95"
+        >
+          <Icone nom="plus" className="size-5" />
+          Ajouter au catalogue
+        </button>
+      </div>
 
-      {prestations?.length === 0 && (
-        <p className="p-4 text-gray-600">
-          Aucune prestation. Ajoutez vos lignes réutilisables avec « + Nouveau ».
-        </p>
-      )}
+      {/* Recherche + filtres */}
+      <div className="mb-lg flex flex-col gap-md rounded-xl border border-outline-variant bg-surface-container-lowest p-md md:flex-row">
+        <div className="relative flex-1">
+          <span className="absolute top-1/2 left-md -translate-y-1/2 text-on-surface-variant">
+            <Icone nom="recherche" className="size-5" />
+          </span>
+          <input
+            value={recherche}
+            onChange={(e) => setRecherche(e.target.value)}
+            className="h-[48px] w-full rounded-lg border border-outline-variant bg-surface-container-lowest pr-md pl-[48px] outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            placeholder="Rechercher par libellé…"
+            type="text"
+          />
+        </div>
+        <select
+          value={uniteFiltre}
+          onChange={(e) => setUniteFiltre(e.target.value as 'tout' | Unite)}
+          className="h-[48px] rounded-lg border border-outline-variant bg-surface-container-lowest px-md text-body-md outline-none focus:border-primary"
+        >
+          <option value="tout">Toutes les unités</option>
+          {UNITES.map((u) => (
+            <option key={u.valeur} value={u.valeur}>
+              {u.label}
+            </option>
+          ))}
+        </select>
+        <select
+          value={tvaFiltre}
+          onChange={(e) => setTvaFiltre(e.target.value)}
+          className="h-[48px] rounded-lg border border-outline-variant bg-surface-container-lowest px-md text-body-md outline-none focus:border-primary"
+        >
+          <option value="tout">Taux TVA</option>
+          {TAUX_TVA.map((t) => (
+            <option key={t.valeur} value={String(t.valeur)}>
+              {t.label}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      <ul className="divide-y divide-gray-100">
-        {prestations?.map((p) => (
-          <li key={p.id}>
-            <button
-              type="button"
-              onClick={() => setEdition(p)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
-            >
-              <div className="min-w-0">
-                <p className="truncate font-medium text-gray-900">
-                  {p.libelle}
-                </p>
-                <p className="truncate text-sm text-gray-500">
-                  {formatEuro(p.prixUnitaireHT)} HT / {libelleUnite[p.unite]} ·
-                  TVA {p.tauxTva} %
-                </p>
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
+      {/* Table */}
+      <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-lowest">
+        <table className="w-full min-w-[640px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-outline-variant bg-surface-container-low text-label-md text-on-surface-variant">
+              <th className="p-md font-semibold">Libellé</th>
+              <th className="p-md font-semibold">Prix Unitaire HT</th>
+              <th className="p-md font-semibold">Unité</th>
+              <th className="p-md font-semibold">TVA</th>
+              <th className="p-md text-right font-semibold">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {liste.length === 0 && (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="p-lg text-body-md text-on-surface-variant"
+                >
+                  Aucune prestation. Ajoutez vos lignes réutilisables.
+                </td>
+              </tr>
+            )}
+            {liste.map((p) => (
+              <tr
+                key={p.id}
+                className="border-b border-outline-variant transition-colors last:border-0 hover:bg-surface-container-low"
+              >
+                <td className="p-md">
+                  <button
+                    type="button"
+                    onClick={() => setEdition(p)}
+                    className="text-headline-sm font-semibold text-primary hover:underline"
+                  >
+                    {p.libelle}
+                  </button>
+                </td>
+                <td className="p-md font-bold text-on-surface">
+                  {formatEuro(p.prixUnitaireHT)}
+                </td>
+                <td className="p-md">
+                  <span className="rounded-full bg-secondary-container px-md py-xs text-label-sm text-on-secondary-container capitalize">
+                    {libelleUnite[p.unite]}
+                  </span>
+                </td>
+                <td className="p-md">
+                  {p.tauxTva === 0 ? (
+                    <span className="rounded-full bg-tertiary-fixed px-md py-xs text-label-sm text-on-tertiary-fixed">
+                      0% (Exo)
+                    </span>
+                  ) : (
+                    <span className="text-body-md text-on-surface-variant">
+                      {p.tauxTva}%
+                    </span>
+                  )}
+                </td>
+                <td className="p-md">
+                  <div className="flex items-center justify-end gap-md text-on-surface-variant">
+                    <button
+                      type="button"
+                      onClick={() => setEdition(p)}
+                      aria-label="Modifier"
+                      className="hover:text-primary"
+                    >
+                      <Icone nom="crayon" className="size-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => supprimer(p)}
+                      aria-label="Supprimer"
+                      className="hover:text-error"
+                    >
+                      <Icone nom="poubelle" className="size-5" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <Feuille
         ouverte={edition !== null}
@@ -112,7 +225,7 @@ export default function Catalogue() {
         onFermer={() => setEdition(null)}
       >
         {edition && (
-          <div className="space-y-4">
+          <div className="space-y-md">
             <ChampTexte
               label="Libellé"
               valeur={edition.libelle}
@@ -138,19 +251,22 @@ export default function Catalogue() {
               options={TAUX_TVA}
             />
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-sm pt-xs">
               <button
                 type="button"
                 onClick={enregistrer}
-                className="flex-1 rounded-lg bg-blue-700 px-4 py-3 font-semibold text-white"
+                className="flex-1 rounded-lg bg-primary px-lg py-sm font-bold text-on-primary"
               >
                 Enregistrer
               </button>
               {edition.id != null && (
                 <button
                   type="button"
-                  onClick={supprimer}
-                  className="rounded-lg border border-red-300 px-4 py-3 font-semibold text-red-600"
+                  onClick={() => {
+                    supprimer(edition)
+                    setEdition(null)
+                  }}
+                  className="rounded-lg border border-error/40 px-lg py-sm font-bold text-error"
                 >
                   Supprimer
                 </button>
@@ -159,6 +275,6 @@ export default function Catalogue() {
           </div>
         )}
       </Feuille>
-    </div>
+    </Page>
   )
 }

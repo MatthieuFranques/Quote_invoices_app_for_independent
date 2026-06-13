@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 
 const baseInput =
-  'w-full rounded-lg border border-gray-300 px-3 py-2.5 text-base outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100'
+  'w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-md py-sm text-body-md outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20'
+
+const baseLabel = 'mb-xs block text-label-sm text-on-surface-variant'
 
 /** Champ texte sur une ligne, avec libellé au-dessus. */
 export function ChampTexte({
@@ -21,9 +23,7 @@ export function ChampTexte({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </span>
+      <span className={baseLabel}>{label}</span>
       <input
         className={baseInput}
         type={type}
@@ -52,10 +52,8 @@ export function ChampNombre({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </span>
-      <div className="flex items-center gap-2">
+      <span className={baseLabel}>{label}</span>
+      <div className="flex items-center gap-sm">
         <input
           className={baseInput}
           type="number"
@@ -66,7 +64,7 @@ export function ChampNombre({
             onChange(e.target.value === '' ? 0 : Number(e.target.value))
           }
         />
-        {suffixe && <span className="text-gray-500">{suffixe}</span>}
+        {suffixe && <span className="text-on-surface-variant">{suffixe}</span>}
       </div>
     </label>
   )
@@ -86,9 +84,7 @@ export function ChampSelect<T extends string | number>({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </span>
+      <span className={baseLabel}>{label}</span>
       <select
         className={baseInput}
         value={valeur}
@@ -122,9 +118,7 @@ export function ChampZone({
 }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </span>
+      <span className={baseLabel}>{label}</span>
       <textarea
         className={baseInput}
         rows={rows}
@@ -135,7 +129,7 @@ export function ChampZone({
   )
 }
 
-/** Interrupteur on/off (case à cocher stylée). */
+/** Interrupteur on/off (style pilule, conforme à la maquette). */
 export function Interrupteur({
   label,
   valeur,
@@ -146,19 +140,23 @@ export function Interrupteur({
   onChange: (v: boolean) => void
 }) {
   return (
-    <label className="flex items-center justify-between gap-3 py-1">
-      <span className="text-sm font-medium text-gray-700">{label}</span>
-      <input
-        type="checkbox"
-        className="size-6 accent-blue-600"
-        checked={valeur}
-        onChange={(e) => onChange(e.target.checked)}
-      />
+    <label className="flex cursor-pointer items-center justify-between gap-sm py-1">
+      <span className="text-label-md text-on-surface">{label}</span>
+      <span className="relative inline-flex items-center">
+        <input
+          type="checkbox"
+          className="peer sr-only"
+          checked={valeur}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span className="h-6 w-11 rounded-full bg-outline-variant transition-colors peer-checked:bg-primary" />
+        <span className="absolute left-[2px] size-5 rounded-full bg-white transition-transform peer-checked:translate-x-5" />
+      </span>
     </label>
   )
 }
 
-/** Regroupe des champs sous un titre de section. */
+/** Regroupe des champs sous un titre de section, dans une carte. */
 export function Section({
   titre,
   children,
@@ -167,11 +165,9 @@ export function Section({
   children: ReactNode
 }) {
   return (
-    <section className="space-y-3">
-      <h2 className="text-sm font-bold tracking-wide text-gray-500 uppercase">
-        {titre}
-      </h2>
-      {children}
+    <section className="rounded-xl border border-outline-variant bg-surface-container-lowest p-lg">
+      <h2 className="mb-md text-headline-sm">{titre}</h2>
+      <div className="space-y-md">{children}</div>
     </section>
   )
 }

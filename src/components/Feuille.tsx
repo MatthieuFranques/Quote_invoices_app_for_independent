@@ -2,8 +2,8 @@ import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 
 /**
- * Feuille modale glissant depuis le bas (bottom sheet). Ergonomie mobile :
- * formulaires de création / édition par-dessus la liste.
+ * Feuille modale. Mobile : glisse depuis le bas (bottom sheet). Desktop :
+ * panneau centré. Sert aux formulaires de création / édition.
  */
 export default function Feuille({
   ouverte,
@@ -16,7 +16,6 @@ export default function Feuille({
   onFermer: () => void
   children: ReactNode
 }) {
-  // Fermeture à la touche Échap.
   useEffect(() => {
     if (!ouverte) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onFermer()
@@ -27,26 +26,26 @@ export default function Feuille({
   if (!ouverte) return null
 
   return (
-    <div className="fixed inset-0 z-30 flex flex-col justify-end bg-black/40">
+    <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/40 md:items-center md:justify-center md:p-lg">
       <button
         type="button"
         aria-label="Fermer"
-        className="flex-1"
+        className="flex-1 md:hidden"
         onClick={onFermer}
       />
-      <div className="max-h-[90vh] overflow-y-auto rounded-t-2xl bg-white">
-        <header className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3">
-          <h2 className="text-lg font-bold text-gray-900">{titre}</h2>
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-xl bg-surface-container-lowest md:max-w-[520px] md:rounded-xl md:shadow-xl">
+        <header className="sticky top-0 flex items-center justify-between border-b border-outline-variant bg-surface-container-lowest px-lg py-md">
+          <h2 className="text-headline-sm">{titre}</h2>
           <button
             type="button"
             onClick={onFermer}
-            className="text-2xl leading-none text-gray-400"
+            className="text-2xl leading-none text-on-surface-variant hover:text-on-surface"
             aria-label="Fermer"
           >
             ×
           </button>
         </header>
-        <div className="p-4">{children}</div>
+        <div className="p-lg">{children}</div>
       </div>
     </div>
   )

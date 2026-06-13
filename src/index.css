@@ -1,6 +1,114 @@
 @import 'tailwindcss';
 
-/* App-wide defaults: mobile-first, large touch targets, system font. */
+/*
+ * Design system « FactureLocale » (cf. maquette/facturelocale/DESIGN.md).
+ * Tokens Material-3 exposés en utilitaires Tailwind v4 via @theme.
+ * 100 % offline : aucune police distante. Inter si présente localement,
+ * sinon repli system-ui.
+ */
+@theme {
+  /* Couleurs */
+  --color-primary: #1f108e;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #3730a3;
+  --color-on-primary-container: #a9a7ff;
+  --color-primary-fixed: #e2dfff;
+  --color-primary-fixed-dim: #c3c0ff;
+  --color-inverse-primary: #c3c0ff;
+
+  --color-secondary: #565e74;
+  --color-on-secondary: #ffffff;
+  --color-secondary-container: #dae2fd;
+  --color-on-secondary-container: #5c647a;
+  --color-secondary-fixed: #dae2fd;
+  --color-secondary-fixed-dim: #bec6e0;
+  --color-on-secondary-fixed: #131b2e;
+
+  --color-tertiary: #511c00;
+  --color-tertiary-container: #752c00;
+  --color-on-tertiary-container: #fe9562;
+  --color-tertiary-fixed: #ffdbcc;
+  --color-tertiary-fixed-dim: #ffb694;
+  --color-on-tertiary-fixed: #351000;
+
+  --color-error: #ba1a1a;
+  --color-on-error: #ffffff;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #93000a;
+
+  --color-surface: #f8f9ff;
+  --color-surface-dim: #cbdbf5;
+  --color-surface-bright: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eff4ff;
+  --color-surface-container: #e5eeff;
+  --color-surface-container-high: #dce9ff;
+  --color-surface-container-highest: #d3e4fe;
+  --color-surface-variant: #d3e4fe;
+
+  --color-on-surface: #0b1c30;
+  --color-on-surface-variant: #464553;
+  --color-inverse-surface: #213145;
+  --color-inverse-on-surface: #eaf1ff;
+
+  --color-outline: #777584;
+  --color-outline-variant: #c8c4d5;
+
+  --color-background: #f8f9ff;
+  --color-on-background: #0b1c30;
+
+  /* Espacements nommés (Material density) */
+  --spacing-base: 4px;
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-gutter: 16px;
+  --spacing-margin-mobile: 16px;
+  --spacing-margin-desktop: 48px;
+
+  /* Rayons */
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+
+  /* Typographie */
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --text-display-lg: 32px;
+  --text-display-lg--line-height: 40px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+
+  --text-headline-lg: 24px;
+  --text-headline-lg--line-height: 32px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg--font-weight: 600;
+
+  --text-headline-lg-mobile: 22px;
+  --text-headline-lg-mobile--line-height: 28px;
+  --text-headline-lg-mobile--font-weight: 700;
+
+  --text-headline-sm: 20px;
+  --text-headline-sm--line-height: 28px;
+  --text-headline-sm--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--font-weight: 600;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 500;
+}
+
 :root {
   color-scheme: light;
 }
@@ -13,11 +121,31 @@ body,
 
 body {
   margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
   -webkit-text-size-adjust: 100%;
+}
+
+/* Barre de défilement discrète */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 10px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Marge basse de sécurité (encoche / barre gestes mobile) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
 }

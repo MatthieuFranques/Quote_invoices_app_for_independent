@@ -41,11 +41,11 @@ export const labelStatut: Record<StatutDocument, string> = {
 
 /** Classe Tailwind (fond + texte) associée à un statut, pour les badges. */
 export const couleurStatut: Record<StatutDocument, string> = {
-  brouillon: 'bg-gray-100 text-gray-600',
-  envoye: 'bg-amber-100 text-amber-700',
-  accepte: 'bg-green-100 text-green-700',
-  refuse: 'bg-red-100 text-red-700',
-  envoyee: 'bg-amber-100 text-amber-700',
-  payee: 'bg-green-100 text-green-700',
-  en_retard: 'bg-red-100 text-red-700',
+  brouillon: 'bg-surface-container-high text-on-surface-variant',
+  envoye: 'bg-surface-variant text-on-surface-variant',
+  accepte: 'bg-green-100 text-green-800',
+  refuse: 'bg-red-100 text-red-800',
+  envoyee: 'bg-surface-variant text-on-surface-variant',
+  payee: 'bg-green-100 text-green-800',
+  en_retard: 'bg-red-100 text-red-800',
 }

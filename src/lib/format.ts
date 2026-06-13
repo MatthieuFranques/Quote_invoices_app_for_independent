@@ -29,6 +29,37 @@ export function formatDate(ts: number | undefined): string {
   return new Date(ts).toLocaleDateString('fr-FR')
 }
 
+/** Timestamp ms → date courte (ex : 12 oct. 2026). */
+export function formatDateCourte(ts: number | undefined): string {
+  if (ts == null) return '—'
+  return new Date(ts).toLocaleDateString('fr-FR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+/** Initiales d'un nom (max 2 lettres) pour les pastilles d'avatar. */
+export function initiales(nom: string): string {
+  const mots = nom.trim().split(/\s+/).filter(Boolean)
+  if (mots.length === 0) return '?'
+  if (mots.length === 1) return mots[0].slice(0, 2).toUpperCase()
+  return (mots[0][0] + mots[mots.length - 1][0]).toUpperCase()
+}
+
+/** Couleur d'avatar stable dérivée du nom (tokens Material). */
+const COULEURS_AVATAR = [
+  'bg-secondary-fixed text-on-secondary-fixed',
+  'bg-tertiary-fixed text-on-tertiary-fixed',
+  'bg-error-container text-on-error-container',
+  'bg-primary-fixed text-on-primary-fixed',
+]
+export function couleurAvatar(nom: string): string {
+  let somme = 0
+  for (let i = 0; i < nom.length; i++) somme += nom.charCodeAt(i)
+  return COULEURS_AVATAR[somme % COULEURS_AVATAR.length]
+}
+
 /** Libellés affichables des unités de prestation. */
 export const libelleUnite: Record<string, string> = {
   heure: 'heure',
